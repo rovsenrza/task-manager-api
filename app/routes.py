@@ -1,7 +1,12 @@
-from flask import Blueprint, jsonify, request, current_app
+from flask import Blueprint, jsonify, request, current_app, render_template
 from . import models
 
 bp = Blueprint("tasks", __name__)
+
+
+@bp.get("/")
+def web_ui():
+    return render_template("index.html"), 200
 
 
 @bp.get("/health")

@@ -1,0 +1,523 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Task Manager UI</title>
+    <style>
+      :root {
+        --bg: #f4f6f8;
+        --card: #ffffff;
+        --text: #20262e;
+        --muted: #6b7785;
+        --accent: #1663be;
+        --danger: #b42318;
+        --border: #dde3ea;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: "Segoe UI", Tahoma, sans-serif;
+        background: linear-gradient(180deg, #eef3f8 0%, var(--bg) 100%);
+        color: var(--text);
+      }
+
+      .container {
+        max-width: 860px;
+        margin: 32px auto;
+        padding: 0 16px 32px;
+      }
+
+      .card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 16px;
+        box-shadow: 0 8px 18px rgba(27, 39, 51, 0.04);
+      }
+
+      h1 {
+        margin: 0 0 8px;
+        font-size: 28px;
+      }
+
+      p {
+        margin: 0;
+        color: var(--muted);
+      }
+
+      form {
+        display: grid;
+        gap: 10px;
+      }
+
+      input,
+      textarea,
+      button {
+        font: inherit;
+      }
+
+      input,
+      textarea {
+        width: 100%;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 10px 12px;
+      }
+
+      textarea {
+        min-height: 84px;
+        resize: vertical;
+      }
+
+      .actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      button {
+        border: 1px solid transparent;
+        border-radius: 8px;
+        padding: 8px 12px;
+        cursor: pointer;
+      }
+
+      .btn-primary {
+        background: var(--accent);
+        color: #fff;
+      }
+
+      .btn-secondary {
+        background: #fff;
+        border-color: var(--border);
+      }
+
+      .btn-danger {
+        background: #fff;
+        border-color: #f2b8b5;
+        color: var(--danger);
+      }
+
+      #status {
+        margin-top: 8px;
+        min-height: 20px;
+        color: var(--muted);
+      }
+
+      ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+
+      li {
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 12px;
+        margin-bottom: 10px;
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        align-items: start;
+      }
+
+      .task-main {
+        min-width: 0;
+      }
+
+      .task-title {
+        margin: 0;
+        font-weight: 600;
+      }
+
+      .task-title.done {
+        text-decoration: line-through;
+        color: var(--muted);
+      }
+
+      .task-desc {
+        margin: 5px 0 0;
+        color: var(--muted);
+        white-space: pre-wrap;
+      }
+
+      .task-meta {
+        margin-top: 6px;
+        font-size: 12px;
+        color: var(--muted);
+      }
+
+      .api-grid {
+        display: grid;
+        gap: 12px;
+      }
+
+      .api-endpoint {
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 12px;
+      }
+
+      .api-head {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-bottom: 8px;
+      }
+
+      .method {
+        font-size: 12px;
+        font-weight: 700;
+        color: #fff;
+        border-radius: 6px;
+        padding: 3px 8px;
+      }
+
+      .method.get {
+        background: #0f766e;
+      }
+
+      .method.post {
+        background: #1663be;
+      }
+
+      .method.put {
+        background: #7c3aed;
+      }
+
+      .method.patch {
+        background: #b45309;
+      }
+
+      .method.delete {
+        background: #b42318;
+      }
+
+      .path {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 14px;
+        font-weight: 600;
+      }
+
+      .endpoint-desc {
+        margin-bottom: 10px;
+      }
+
+      .spec {
+        display: grid;
+        gap: 6px;
+      }
+
+      .spec-row {
+        font-size: 13px;
+        color: #334155;
+      }
+
+      .spec-row code {
+        background: #f7f9fc;
+        border: 1px solid #edf1f6;
+        padding: 1px 5px;
+        border-radius: 5px;
+      }
+
+      pre {
+        margin: 8px 0 0;
+        padding: 10px;
+        overflow: auto;
+        background: #f7f9fc;
+        border: 1px solid #edf1f6;
+        border-radius: 8px;
+        font-size: 12px;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="container">
+      <section class="card">
+        <h1>Task Manager API UI</h1>
+        <p>Use this page to call the API in real time from the browser.</p>
+      </section>
+
+      <section class="card">
+        <form id="task-form">
+          <input id="title" type="text" placeholder="Task title (required)" required />
+          <textarea id="description" placeholder="Description (optional)"></textarea>
+          <div class="actions">
+            <button type="submit" class="btn-primary">Create Task</button>
+            <button type="button" id="refresh" class="btn-secondary">Refresh List</button>
+          </div>
+        </form>
+        <div id="status"></div>
+      </section>
+
+      <section class="card">
+        <ul id="task-list"></ul>
+      </section>
+
+      <section class="card">
+        <h2>API Reference</h2>
+        <p style="margin-bottom: 12px">Base URL: <code>http://localhost:5000</code></p>
+
+        <div class="api-grid">
+          <article class="api-endpoint">
+            <div class="api-head">
+              <span class="method get">GET</span>
+              <span class="path">/health</span>
+            </div>
+            <p class="endpoint-desc">Service health status.</p>
+            <div class="spec">
+              <div class="spec-row"><strong>Path params:</strong> none</div>
+              <div class="spec-row"><strong>Query params:</strong> none</div>
+              <div class="spec-row"><strong>Body:</strong> none</div>
+              <div class="spec-row"><strong>200:</strong> <code>{"status":"ok"}</code></div>
+            </div>
+            <pre>curl http://localhost:5000/health</pre>
+          </article>
+
+          <article class="api-endpoint">
+            <div class="api-head">
+              <span class="method get">GET</span>
+              <span class="path">/info</span>
+            </div>
+            <p class="endpoint-desc">App info and runtime config.</p>
+            <div class="spec">
+              <div class="spec-row"><strong>Path params:</strong> none</div>
+              <div class="spec-row"><strong>Query params:</strong> none</div>
+              <div class="spec-row"><strong>Body:</strong> none</div>
+              <div class="spec-row"><strong>200:</strong> <code>{"app":"Task Manager API","version":"1.0.0","max_tasks":100}</code></div>
+            </div>
+            <pre>curl http://localhost:5000/info</pre>
+          </article>
+
+          <article class="api-endpoint">
+            <div class="api-head">
+              <span class="method get">GET</span>
+              <span class="path">/tasks</span>
+            </div>
+            <p class="endpoint-desc">List all tasks.</p>
+            <div class="spec">
+              <div class="spec-row"><strong>Path params:</strong> none</div>
+              <div class="spec-row"><strong>Query params:</strong> none</div>
+              <div class="spec-row"><strong>Body:</strong> none</div>
+              <div class="spec-row"><strong>200:</strong> <code>[{...task}]</code></div>
+            </div>
+            <pre>curl http://localhost:5000/tasks</pre>
+          </article>
+
+          <article class="api-endpoint">
+            <div class="api-head">
+              <span class="method get">GET</span>
+              <span class="path">/tasks/{id}</span>
+            </div>
+            <p class="endpoint-desc">Get one task by ID.</p>
+            <div class="spec">
+              <div class="spec-row"><strong>Path params:</strong> <code>id</code> (integer)</div>
+              <div class="spec-row"><strong>Query params:</strong> none</div>
+              <div class="spec-row"><strong>Body:</strong> none</div>
+              <div class="spec-row"><strong>200:</strong> <code>{...task}</code></div>
+              <div class="spec-row"><strong>404:</strong> <code>{"error":"Task not found"}</code></div>
+            </div>
+            <pre>curl http://localhost:5000/tasks/1</pre>
+          </article>
+
+          <article class="api-endpoint">
+            <div class="api-head">
+              <span class="method post">POST</span>
+              <span class="path">/tasks</span>
+            </div>
+            <p class="endpoint-desc">Create a new task.</p>
+            <div class="spec">
+              <div class="spec-row"><strong>Path params:</strong> none</div>
+              <div class="spec-row"><strong>Query params:</strong> none</div>
+              <div class="spec-row"><strong>Body:</strong> <code>{"title":"string","description":"string(optional)"}</code></div>
+              <div class="spec-row"><strong>201:</strong> <code>{...created_task}</code></div>
+              <div class="spec-row"><strong>400:</strong> <code>{"error":"'title' is required"}</code></div>
+              <div class="spec-row"><strong>409:</strong> <code>{"error":"Task limit (N) reached"}</code></div>
+            </div>
+            <pre>curl -X POST http://localhost:5000/tasks \
+  -H "Content-Type: application/json" \
+  -d '{"title":"Buy milk","description":"2 litres"}'</pre>
+          </article>
+
+          <article class="api-endpoint">
+            <div class="api-head">
+              <span class="method put">PUT</span>
+              <span class="path">/tasks/{id}</span>
+            </div>
+            <p class="endpoint-desc">Not implemented in v1.0.0 (use PATCH for partial update).</p>
+            <div class="spec">
+              <div class="spec-row"><strong>Status:</strong> endpoint not available</div>
+            </div>
+          </article>
+
+          <article class="api-endpoint">
+            <div class="api-head">
+              <span class="method patch">PATCH</span>
+              <span class="path">/tasks/{id}</span>
+            </div>
+            <p class="endpoint-desc">Update done/undone state of task.</p>
+            <div class="spec">
+              <div class="spec-row"><strong>Path params:</strong> <code>id</code> (integer)</div>
+              <div class="spec-row"><strong>Query params:</strong> none</div>
+              <div class="spec-row"><strong>Body:</strong> <code>{"done":true|false}</code></div>
+              <div class="spec-row"><strong>200:</strong> <code>{...updated_task}</code></div>
+              <div class="spec-row"><strong>400:</strong> <code>{"error":"'done' field is required"}</code></div>
+              <div class="spec-row"><strong>404:</strong> <code>{"error":"Task not found"}</code></div>
+            </div>
+            <pre>curl -X PATCH http://localhost:5000/tasks/1 \
+  -H "Content-Type: application/json" \
+  -d '{"done":true}'</pre>
+          </article>
+
+          <article class="api-endpoint">
+            <div class="api-head">
+              <span class="method delete">DELETE</span>
+              <span class="path">/tasks/{id}</span>
+            </div>
+            <p class="endpoint-desc">Delete a task by ID.</p>
+            <div class="spec">
+              <div class="spec-row"><strong>Path params:</strong> <code>id</code> (integer)</div>
+              <div class="spec-row"><strong>Query params:</strong> none</div>
+              <div class="spec-row"><strong>Body:</strong> none</div>
+              <div class="spec-row"><strong>200:</strong> <code>{"message":"Task deleted","task":{...}}</code></div>
+              <div class="spec-row"><strong>404:</strong> <code>{"error":"Task not found"}</code></div>
+            </div>
+            <pre>curl -X DELETE http://localhost:5000/tasks/1</pre>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      const taskList = document.getElementById("task-list");
+      const taskForm = document.getElementById("task-form");
+      const statusEl = document.getElementById("status");
+      const refreshBtn = document.getElementById("refresh");
+
+      function setStatus(message, isError = false) {
+        statusEl.textContent = message;
+        statusEl.style.color = isError ? "#b42318" : "#6b7785";
+      }
+
+      async function fetchJSON(url, options = {}) {
+        const response = await fetch(url, options);
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          throw new Error(data.error || `Request failed with ${response.status}`);
+        }
+        return data;
+      }
+
+      function renderTasks(tasks) {
+        taskList.innerHTML = "";
+        if (!tasks.length) {
+          const item = document.createElement("li");
+          item.textContent = "No tasks yet.";
+          taskList.appendChild(item);
+          return;
+        }
+
+        tasks.forEach((task) => {
+          const li = document.createElement("li");
+
+          const left = document.createElement("div");
+          left.className = "task-main";
+
+          const title = document.createElement("p");
+          title.className = `task-title ${task.done ? "done" : ""}`;
+          title.textContent = `#${task.id} ${task.title}`;
+
+          const desc = document.createElement("p");
+          desc.className = "task-desc";
+          desc.textContent = task.description || "(no description)";
+
+          const meta = document.createElement("p");
+          meta.className = "task-meta";
+          meta.textContent = `done: ${task.done} | created_at: ${task.created_at}`;
+
+          left.append(title, desc, meta);
+
+          const right = document.createElement("div");
+          right.className = "actions";
+
+          const toggleBtn = document.createElement("button");
+          toggleBtn.className = "btn-secondary";
+          toggleBtn.textContent = task.done ? "Mark Undone" : "Mark Done";
+          toggleBtn.addEventListener("click", async () => {
+            try {
+              await fetchJSON(`/tasks/${task.id}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ done: !task.done }),
+              });
+              await loadTasks();
+            } catch (error) {
+              setStatus(error.message, true);
+            }
+          });
+
+          const deleteBtn = document.createElement("button");
+          deleteBtn.className = "btn-danger";
+          deleteBtn.textContent = "Delete";
+          deleteBtn.addEventListener("click", async () => {
+            try {
+              await fetchJSON(`/tasks/${task.id}`, { method: "DELETE" });
+              setStatus(`Task #${task.id} deleted.`);
+              await loadTasks();
+            } catch (error) {
+              setStatus(error.message, true);
+            }
+          });
+
+          right.append(toggleBtn, deleteBtn);
+          li.append(left, right);
+          taskList.appendChild(li);
+        });
+      }
+
+      async function loadTasks() {
+        try {
+          const tasks = await fetchJSON("/tasks");
+          renderTasks(tasks);
+          setStatus(`Loaded ${tasks.length} task(s).`);
+        } catch (error) {
+          setStatus(error.message, true);
+        }
+      }
+
+      taskForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const title = document.getElementById("title").value.trim();
+        const description = document.getElementById("description").value;
+
+        if (!title) {
+          setStatus("Title is required.", true);
+          return;
+        }
+
+        try {
+          await fetchJSON("/tasks", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ title, description }),
+          });
+          taskForm.reset();
+          setStatus("Task created.");
+          await loadTasks();
+        } catch (error) {
+          setStatus(error.message, true);
+        }
+      });
+
+      refreshBtn.addEventListener("click", loadTasks);
+      loadTasks();
+    </script>
+  </body>
+</html>

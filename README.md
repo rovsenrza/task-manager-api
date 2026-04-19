@@ -53,7 +53,9 @@ cp .env.example .env
 python run.py
 ```
 
-Visit: http://localhost:5000/info
+Visit:
+- Web UI: http://localhost:5000/
+- API info: http://localhost:5000/info
 
 ---
 
@@ -62,6 +64,16 @@ Visit: http://localhost:5000/info
 ```bash
 pytest tests/ -v
 ```
+
+## 🌐 Web Interface
+
+The project includes a simple browser UI for real-time API usage.
+
+- Open: `http://localhost:5000/`
+- Create tasks with form
+- Mark tasks done/undone
+- Delete tasks
+- Refresh list
 
 ---
 
